@@ -4,3 +4,5 @@ database/database.sqlite-wal
 database/database.sqlite-shm
 .env
 *.log
+vps-cmd.js
+.claude/
