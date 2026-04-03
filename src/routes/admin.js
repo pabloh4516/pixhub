@@ -505,6 +505,57 @@ router.post("/transactions/:id/retry-webhook", async (req, res) => {
   res.json(result);
 });
 
+// ===== WEBHOOKS =====
+router.get("/webhooks", (req, res) => {
+  // All keys with webhook config
+  const keys = db.prepare("SELECT id, key, label, webhook_url, webhook_secret, is_active FROM api_keys WHERE webhook_url != '' ORDER BY created_at DESC").all();
+
+  // Recent webhook deliveries (from transactions)
+  const deliveries = db.prepare(`
+    SELECT t.id, t.pix_id, t.amount_cents, t.status, t.webhook_sent, t.webhook_status,
+      t.webhook_attempts, t.webhook_next_retry, t.updated_at, ak.label as key_label, ak.webhook_url
+    FROM transactions t
+    JOIN api_keys ak ON ak.key = t.api_key
+    WHERE t.webhook_attempts > 0
+    ORDER BY t.updated_at DESC LIMIT 50
+  `).all();
+
+  // Pending retries
+  const pendingRetries = db.prepare(`
+    SELECT t.id, t.pix_id, t.amount_cents, t.status, t.webhook_status,
+      t.webhook_attempts, t.webhook_next_retry, ak.label as key_label, ak.webhook_url
+    FROM transactions t
+    JOIN api_keys ak ON ak.key = t.api_key
+    WHERE t.webhook_sent = 0 AND t.webhook_next_retry != '' AND ak.is_active = 1
+    ORDER BY t.webhook_next_retry ASC
+  `).all();
+
+  // Stats
+  const totalSent = db.prepare("SELECT COUNT(*) as c FROM transactions WHERE webhook_attempts > 0").get().c;
+  const totalOk = db.prepare("SELECT COUNT(*) as c FROM transactions WHERE webhook_sent = 1").get().c;
+  const totalFailed = db.prepare("SELECT COUNT(*) as c FROM transactions WHERE webhook_sent = 0 AND webhook_attempts > 0").get().c;
+
+  res.json({
+    endpoints: keys.map(k => ({
+      id: k.id, label: k.label, webhookUrl: k.webhook_url,
+      keyPreview: k.key.slice(0, 12) + "..." + k.key.slice(-4),
+      isActive: !!k.is_active
+    })),
+    deliveries: deliveries.map(d => ({
+      txId: d.id, pixId: d.pix_id, amountCents: d.amount_cents, status: d.status,
+      webhookSent: !!d.webhook_sent, webhookStatus: d.webhook_status,
+      attempts: d.webhook_attempts, nextRetry: d.webhook_next_retry,
+      updatedAt: d.updated_at, keyLabel: d.key_label, webhookUrl: d.webhook_url
+    })),
+    pendingRetries: pendingRetries.map(d => ({
+      txId: d.id, pixId: d.pix_id, amountCents: d.amount_cents, status: d.status,
+      webhookStatus: d.webhook_status, attempts: d.webhook_attempts,
+      nextRetry: d.webhook_next_retry, keyLabel: d.key_label, webhookUrl: d.webhook_url
+    })),
+    stats: { total: totalSent, success: totalOk, failed: totalFailed, rate: totalSent > 0 ? Math.round((totalOk / totalSent) * 100) : 0 }
+  });
+});
+
 // ===== LOGS =====
 router.get("/logs", (req, res) => {
   const limit = Math.min(parseInt(req.query.limit) || 100, 500);

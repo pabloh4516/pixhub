@@ -85,6 +85,7 @@
     <button class="nv a" data-p="ov">Visao geral</button>
     <button class="nv" data-p="acc">Contas DePix</button>
     <button class="nv" data-p="keys">API Keys</button>
+    <button class="nv" data-p="wh">Webhooks</button>
     <button class="nv" data-p="txs">Transacoes</button>
     <button class="nv" data-p="logs">Logs</button>
     <button class="nv" data-p="sys">Sistema</button>
@@ -190,6 +191,25 @@ if (sig === expected) { /* valido */ }
       <div class="tw"><table><thead><tr><th>Label</th><th>Key</th><th>Webhook</th><th>Requests</th><th>Rate Limit</th><th>Status</th><th>Acoes</th></tr></thead><tbody id="key-tb"></tbody></table></div>
       <div class="empty" id="key-e" style="display:none">Nenhuma API key</div>
     </div>
+    <!-- WEBHOOKS -->
+    <div class="sec" id="p-wh">
+      <h1>Webhooks</h1><p class="desc">Monitorar entregas e gerenciar endpoints</p>
+
+      <div class="sts" id="wh-stats"></div>
+
+      <h2>Endpoints configurados</h2>
+      <div id="wh-endpoints"></div>
+      <div class="empty" id="wh-ep-e" style="display:none">Nenhum webhook configurado. Adicione uma URL na <a style="color:#38e3ac;cursor:pointer" onclick="document.querySelector('[data-p=keys]').click()">API Key</a>.</div>
+
+      <h2 style="margin-top:20px">Retries pendentes</h2>
+      <div id="wh-retries"></div>
+      <div class="empty" id="wh-rt-e" style="display:none">Nenhum retry pendente</div>
+
+      <h2 style="margin-top:20px">Entregas recentes</h2>
+      <div class="tw"><table><thead><tr><th>PIX ID</th><th>Key</th><th>Valor</th><th>Status</th><th>Webhook</th><th>Tentativas</th><th>Data</th><th></th></tr></thead><tbody id="wh-del-tb"></tbody></table></div>
+      <div class="empty" id="wh-del-e" style="display:none">Nenhuma entrega registrada</div>
+    </div>
+
     <!-- TRANSACTIONS -->
     <div class="sec" id="p-txs">
       <h1>Transacoes</h1><p class="desc">Todas as transacoes do sistema</p>
@@ -276,7 +296,7 @@ const[l,c]=m[t]||[t,"gr"];return`<span class="badge ${c}">${l}</span>`}
 document.querySelectorAll(".nv[data-p]").forEach(b=>{b.addEventListener("click",()=>{
   document.querySelectorAll(".nv").forEach(n=>n.classList.remove("a"));b.classList.add("a");
   document.querySelectorAll(".sec").forEach(s=>s.classList.remove("a"));document.getElementById("p-"+b.dataset.p).classList.add("a");
-  const fn={ov:loadOv,acc:loadAcc,keys:loadKeys,txs:loadTxs,logs:loadLogs,sys:loadSys};if(fn[b.dataset.p])fn[b.dataset.p]();
+  const fn={ov:loadOv,acc:loadAcc,keys:loadKeys,wh:loadWh,txs:loadTxs,logs:loadLogs,sys:loadSys};if(fn[b.dataset.p])fn[b.dataset.p]();
   // Auto-refresh for overview
   clearInterval(autoRef);if(b.dataset.p==="ov")startAutoRef();
 })});
@@ -402,6 +422,75 @@ async function testAcc(id){
 async function toggleAcc(id){await F(`/api/admin/accounts/${id}/toggle`,{method:"POST"});loadAcc()}
 async function clearErr(id){await F(`/api/admin/accounts/${id}/clear-error`,{method:"POST"});loadAcc()}
 async function delAcc(id,e){if(!confirm(`Excluir ${e}?`))return;await F(`/api/admin/accounts/${id}`,{method:"DELETE"});loadAcc()}
+
+// WEBHOOKS
+async function loadWh(){try{const r=await F("/api/admin/webhooks"),d=await r.json();
+
+// Stats
+document.getElementById("wh-stats").innerHTML=`
+  <div class="st"><div class="st-l">Total enviados</div><div class="st-v">${d.stats.total}</div></div>
+  <div class="st"><div class="st-l">Sucesso</div><div class="st-v g">${d.stats.success}</div></div>
+  <div class="st"><div class="st-l">Falhados</div><div class="st-v ${d.stats.failed>0?"r":""}">${d.stats.failed}</div></div>
+  <div class="st"><div class="st-l">Taxa</div><div class="st-v ${d.stats.rate>=80?"g":d.stats.rate>=50?"y":"r"}">${d.stats.rate}%</div></div>`;
+
+// Endpoints
+const epEl=document.getElementById("wh-endpoints"),epE=document.getElementById("wh-ep-e");
+if(!d.endpoints.length){epEl.innerHTML="";epE.style.display="block"}else{epE.style.display="none";
+epEl.innerHTML=d.endpoints.map(e=>`<div style="background:#0d1117;border:1px solid #1e2a36;border-radius:10px;padding:14px;margin-bottom:10px">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+    <div><strong style="color:#fff">${esc(e.label)}</strong> <span class="badge ${e.isActive?"g":"r"}">${e.isActive?"Ativa":"Bloqueada"}</span></div>
+    <div class="acts">
+      <button class="b bs" onclick="editWhUrl(${e.id})">Editar URL</button>
+      <button class="b bs bb" onclick="testWh(${e.id})">Enviar teste</button>
+    </div>
+  </div>
+  <div class="mono" style="font-size:12px;color:#6495ed;word-break:break-all;background:#111921;padding:8px;border-radius:6px;cursor:pointer;border:1px solid #1e2a36" onclick="navigator.clipboard.writeText('${esc(e.webhookUrl)}')" title="Copiar">${esc(e.webhookUrl)}</div>
+  <div style="font-size:10px;color:#3a4a5a;margin-top:6px">Key: ${esc(e.keyPreview)}</div>
+</div>`).join("")}
+
+// Pending retries
+const rtEl=document.getElementById("wh-retries"),rtE=document.getElementById("wh-rt-e");
+if(!d.pendingRetries.length){rtEl.innerHTML="";rtE.style.display="block"}else{rtE.style.display="none";
+rtEl.innerHTML=`<div class="tw"><table><thead><tr><th>PIX ID</th><th>Key</th><th>Valor</th><th>Status</th><th>Tentativas</th><th>Proximo retry</th><th></th></tr></thead><tbody>`+
+d.pendingRetries.map(r=>`<tr>
+  <td><span class="mono trunc" style="max-width:100px">${esc((r.pixId||"").slice(0,14))}...</span></td>
+  <td style="font-size:11px">${esc(r.keyLabel)}</td>
+  <td>${fmt(r.amountCents)}</td>
+  <td>${stB(r.status)}</td>
+  <td><span class="badge r">#${r.attempts}</span></td>
+  <td style="font-size:10px">${fD(r.nextRetry)}</td>
+  <td><button class="b bs bb" onclick="retryWh(${r.txId})">Reenviar</button></td>
+</tr>`).join("")+`</tbody></table></div>`}
+
+// Deliveries
+const delTb=document.getElementById("wh-del-tb"),delE=document.getElementById("wh-del-e");
+if(!d.deliveries.length){delTb.innerHTML="";delE.style.display="block"}else{delE.style.display="none";
+delTb.innerHTML=d.deliveries.map(dl=>`<tr>
+  <td><span class="mono trunc" style="max-width:100px">${esc((dl.pixId||"").slice(0,14))}...</span></td>
+  <td style="font-size:11px">${esc(dl.keyLabel)}</td>
+  <td>${fmt(dl.amountCents)}</td>
+  <td>${stB(dl.status)}</td>
+  <td>${dl.webhookSent?`<span class="badge g">OK</span>`:`<span class="badge r">Falha</span>`} <span style="font-size:10px;color:#3a4a5a">${esc(dl.webhookStatus||"")}</span></td>
+  <td>${dl.attempts}x</td>
+  <td style="font-size:10px">${fD(dl.updatedAt)}</td>
+  <td>${!dl.webhookSent?`<button class="b bs bb" onclick="retryWh(${dl.txId})">Retry</button>`:""}</td>
+</tr>`).join("")}
+}catch{}}
+
+async function editWhUrl(keyId){
+  const r=await F("/api/admin/keys"),d=await r.json(),k=d.keys.find(x=>x.id===keyId);if(!k)return;
+  const mc=document.getElementById("mc");
+  mc.innerHTML=`<h2>Editar Webhook URL</h2><p class="desc">${esc(k.label)}</p><p class="msg" id="mm"></p>
+    <label>Webhook URL</label><input id="ew-url" value="${esc(k.webhookUrl||"")}" placeholder="https://seusite.com/webhook"/>
+    <div style="display:flex;gap:6px;margin-top:6px"><button class="b" onclick="saveWhUrl(${keyId})">Salvar</button><button class="b bg" onclick="closeM()">Cancelar</button></div>`;
+  document.getElementById("mbg").classList.add("a");
+}
+async function saveWhUrl(keyId){
+  const url=document.getElementById("ew-url").value.trim();
+  const r=await F(`/api/admin/keys/${keyId}`,{method:"PATCH",body:JSON.stringify({webhookUrl:url})});
+  if(!r.ok){document.getElementById("mm").textContent="Erro";document.getElementById("mm").className="msg e";return}
+  closeM();loadWh();
+}
 
 // KEYS
 async function loadKeys(){try{const r=await F("/api/admin/keys"),d=await r.json();
