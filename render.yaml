@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: pixhub
+    runtime: node
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: PORT
+        value: 3000
+      - key: ADMIN_USER
+        sync: false
+      - key: ADMIN_PASS
+        sync: false
+      - key: ENCRYPTION_KEY
+        sync: false
+    healthCheckPath: /health
+    disk:
+      name: depix-data
+      mountPath: /app/database
+      sizeGB: 1

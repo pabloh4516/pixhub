@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin — PixHub</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#060a0e;color:#e0e0e0;min-height:100vh}
+    .lw{min-height:100vh;display:flex;align-items:center;justify-content:center}
+    .lc{background:#111921;border:1px solid #1e2a36;border-radius:16px;padding:32px;width:100%;max-width:380px}
+    .aw{display:none;min-height:100vh}.aw.a{display:flex}
+    .sb{width:200px;background:#0d1117;border-right:1px solid #1e2a36;padding:16px 0;position:fixed;height:100vh;overflow-y:auto}
+    .sb-b{padding:0 16px 16px;border-bottom:1px solid #1e2a36;margin-bottom:8px}
+    .sb-b h2{font-size:15px;color:#38e3ac}.sb-b p{font-size:10px;color:#3a4a5a}
+    .nv{display:block;padding:9px 16px;font-size:12px;color:#8a9bb0;cursor:pointer;border:none;background:none;width:100%;text-align:left}
+    .nv:hover{background:#1a2332;color:#e0e0e0}.nv.a{background:#1a2332;color:#38e3ac;border-right:3px solid #38e3ac}
+    .nd{height:1px;background:#1e2a36;margin:6px 0}.nv.out{color:#ff6b6b}
+    .mn{flex:1;margin-left:200px;padding:24px}
+    h1{font-size:18px;color:#fff;margin-bottom:4px}h2{font-size:14px;color:#e0e0e0;margin-bottom:12px}
+    .desc{font-size:12px;color:#8a9bb0;margin-bottom:20px}
+    .sec{display:none}.sec.a{display:block}
+    label{display:block;font-size:11px;color:#8a9bb0;margin-bottom:4px}
+    input,select{width:100%;padding:9px 11px;background:#0a0f14;border:1px solid #1e2a36;border-radius:8px;color:#fff;font-size:13px;outline:none;margin-bottom:10px}
+    input:focus{border-color:#38e3ac}select option{background:#111921}
+    .b{padding:9px 16px;background:#38e3ac;color:#0a0f14;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;display:inline-block}
+    .b:hover{opacity:.9}.b:disabled{opacity:.5}
+    .bg{background:transparent;border:1px solid #1e2a36;color:#8a9bb0}
+    .bd{background:transparent;border:1px solid #ff6b6b;color:#ff6b6b}
+    .bw{background:transparent;border:1px solid #ffc107;color:#ffc107}
+    .bb{background:transparent;border:1px solid #6495ed;color:#6495ed}
+    .bs{padding:5px 10px;font-size:11px}
+    .msg{font-size:12px;text-align:center;margin-bottom:10px;min-height:16px}.msg.e{color:#ff6b6b}.msg.s{color:#38e3ac}
+    .sts{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:10px;margin-bottom:20px}
+    .st{background:#111921;border:1px solid #1e2a36;border-radius:10px;padding:14px}
+    .st-l{font-size:10px;color:#8a9bb0;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
+    .st-v{font-size:20px;font-weight:700;color:#fff}.st-v.g{color:#38e3ac}.st-v.y{color:#ffc107}.st-v.r{color:#ff6b6b}.st-v.bl{color:#6495ed}
+    .st-s{font-size:10px;color:#3a4a5a;margin-top:2px}
+    /* Chart */
+    .chart{margin-bottom:20px}.cr{display:flex;align-items:center;gap:8px;margin-bottom:5px}
+    .cl{font-size:10px;color:#8a9bb0;width:36px;text-align:right;flex-shrink:0}
+    .cb{flex:1;height:20px;background:#0a0f14;border-radius:5px;overflow:hidden;position:relative}
+    .cf{height:100%;background:linear-gradient(90deg,#38e3ac,#2bc494);border-radius:5px;transition:width .5s;min-width:2px}
+    .cv{position:absolute;right:6px;top:50%;transform:translateY(-50%);font-size:9px;color:#8a9bb0;font-weight:600}
+    /* Table */
+    .tw{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:12px}
+    th{text-align:left;padding:8px 10px;color:#8a9bb0;font-size:10px;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid #1e2a36;background:#0d1117}
+    td{padding:8px 10px;border-bottom:1px solid #151d27;vertical-align:middle}tr:hover td{background:#151d27}
+    .badge{display:inline-block;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:600}
+    .badge.g{background:rgba(56,227,172,.15);color:#38e3ac}.badge.r{background:rgba(255,107,107,.15);color:#ff6b6b}
+    .badge.y{background:rgba(255,193,7,.15);color:#ffc107}.badge.bl{background:rgba(100,149,237,.15);color:#6495ed}
+    .badge.gr{background:rgba(138,155,176,.15);color:#8a9bb0}.badge.o{background:rgba(255,165,0,.15);color:#ffa500}
+    .mono{font-family:monospace;font-size:11px;color:#38e3ac}
+    .trunc{max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block}
+    .acts{display:flex;gap:4px;flex-wrap:wrap}.empty{text-align:center;color:#3a4a5a;padding:30px 0;font-size:13px}
+    .log{display:flex;gap:10px;padding:7px 0;border-bottom:1px solid #151d27;font-size:11px;align-items:flex-start}
+    .log-t{color:#3a4a5a;font-family:monospace;font-size:10px;flex-shrink:0;width:130px}.log-d{color:#8a9bb0;flex:1;word-break:break-all}
+    .ll{max-height:500px;overflow-y:auto}
+    .mbg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;align-items:center;justify-content:center}.mbg.a{display:flex}
+    .modal{background:#111921;border:1px solid #1e2a36;border-radius:14px;padding:24px;width:100%;max-width:500px;max-height:90vh;overflow-y:auto}
+    .fr{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .err-tag{font-size:10px;color:#ff6b6b;background:rgba(255,107,107,.1);padding:2px 6px;border-radius:4px;margin-left:4px}
+    .reveal{filter:blur(4px);cursor:pointer;transition:filter .2s}.reveal:hover,.reveal.shown{filter:none}
+    .toolbar{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;align-items:center}
+    .auto-badge{font-size:10px;color:#38e3ac;margin-left:auto}
+    @media(max-width:768px){.sb{width:56px}.sb-b h2,.sb-b p{display:none}.nv{padding:8px;text-align:center;font-size:10px}.mn{margin-left:56px;padding:14px}.sts{grid-template-columns:1fr 1fr}.fr{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+
+<div class="lw" id="lw">
+  <div class="lc">
+    <h1 style="text-align:center;color:#38e3ac;margin-bottom:4px;">Admin</h1>
+    <p style="text-align:center;color:#8a9bb0;font-size:12px;margin-bottom:20px;">Painel de administracao</p>
+    <p class="msg" id="lm"></p>
+    <label>Usuario</label><input id="lu" placeholder="admin"/>
+    <label>Senha</label><input type="password" id="lp" placeholder="Senha"/>
+    <button class="b" style="width:100%" id="lb">Entrar</button>
+  </div>
+</div>
+
+<div class="aw" id="aw">
+  <div class="sb">
+    <div class="sb-b"><h2>PixHub Admin</h2><p>Painel de controle</p></div>
+    <button class="nv a" data-p="ov">Visao geral</button>
+    <button class="nv" data-p="acc">Contas DePix</button>
+    <button class="nv" data-p="keys">API Keys</button>
+    <button class="nv" data-p="txs">Transacoes</button>
+    <button class="nv" data-p="logs">Logs</button>
+    <button class="nv" data-p="sys">Sistema</button>
+    <div class="nd"></div>
+    <button class="nv out" id="lo">Sair</button>
+  </div>
+  <div class="mn">
+    <!-- OVERVIEW -->
+    <div class="sec a" id="p-ov">
+      <h1>Visao geral</h1><p class="desc">Resumo do sistema <span class="auto-badge" id="ar-badge"></span></p>
+      <div class="sts" id="ov-s"></div>
+      <h2>Transacoes — ultimos 7 dias</h2>
+      <div class="chart" id="ov-chart"></div>
+      <h2>Contas mais usadas</h2>
+      <div class="tw"><table><thead><tr><th>Email</th><th>Transacoes</th><th>Conversao</th><th>Volume</th><th>Status</th></tr></thead><tbody id="ov-top"></tbody></table></div>
+    </div>
+    <!-- ACCOUNTS -->
+    <div class="sec" id="p-acc">
+      <h1>Contas DePix</h1><p class="desc">Gerenciar contas que processam pagamentos</p>
+      <div class="toolbar">
+        <button class="b bs" onclick="openM('add')">Adicionar conta</button>
+        <button class="b bs bb" onclick="openM('reg')">Criar na DePix</button>
+        <span style="margin-left:auto;display:flex;align-items:center;gap:8px">
+          <span style="font-size:11px;color:#8a9bb0" id="rr-label">Round-robin: —</span>
+          <button class="b bs" id="rr-toggle" onclick="toggleRR()">—</button>
+        </span>
+      </div>
+      <div class="tw"><table><thead><tr><th>#</th><th>Email</th><th>Usuario</th><th>Endereco</th><th>TX</th><th>Conversao</th><th>Volume</th><th>Status</th><th>Acoes</th></tr></thead><tbody id="acc-tb"></tbody></table></div>
+      <div class="empty" id="acc-e" style="display:none">Nenhuma conta</div>
+    </div>
+    <!-- KEYS -->
+    <div class="sec" id="p-keys">
+      <h1>API Keys</h1><p class="desc">Chaves de API para integracao</p>
+      <div class="toolbar"><button class="b bs" onclick="openM('key')">Criar API Key</button></div>
+      <div class="tw"><table><thead><tr><th>Label</th><th>Key</th><th>Webhook</th><th>Requests</th><th>Rate Limit</th><th>Status</th><th>Acoes</th></tr></thead><tbody id="key-tb"></tbody></table></div>
+      <div class="empty" id="key-e" style="display:none">Nenhuma API key</div>
+    </div>
+    <!-- TRANSACTIONS -->
+    <div class="sec" id="p-txs">
+      <h1>Transacoes</h1><p class="desc">Todas as transacoes do sistema</p>
+      <div class="toolbar">
+        <select id="txf-st" style="width:auto;min-width:120px;margin:0"><option value="">Status</option><option value="pending">Pendente</option><option value="depix_sent">Pago</option><option value="expired">Expirado</option><option value="canceled">Cancelado</option><option value="error">Erro</option></select>
+        <select id="txf-acc" style="width:auto;min-width:120px;margin:0"><option value="">Conta</option></select>
+        <input id="txf-q" placeholder="Buscar PIX ID, external, pagador..." style="width:auto;min-width:180px;margin:0"/>
+        <input id="txf-from" type="date" style="width:auto;margin:0"/>
+        <input id="txf-to" type="date" style="width:auto;margin:0"/>
+        <button class="b bs bg" onclick="loadTxs()">Filtrar</button>
+        <button class="b bs bb" onclick="exportCSV()">CSV</button>
+      </div>
+      <div class="tw"><table><thead><tr><th>PIX ID</th><th>Conta</th><th>Valor</th><th>Status</th><th>Pagador</th><th>Webhook</th><th>Data</th><th></th></tr></thead><tbody id="tx-tb"></tbody></table></div>
+      <div class="empty" id="tx-e" style="display:none">Nenhuma transacao</div>
+      <div style="margin-top:10px;display:flex;gap:6px" id="tx-pg"></div>
+    </div>
+    <!-- LOGS -->
+    <div class="sec" id="p-logs">
+      <h1>Logs</h1><p class="desc">Historico de atividades</p>
+      <div class="toolbar">
+        <select id="logf" style="width:auto;min-width:160px;margin:0">
+          <option value="">Todos</option><option value="pix_created">PIX criado</option><option value="pix_status_changed">Status alterado</option>
+          <option value="webhook_sent">Webhook</option><option value="webhook_retry">Retry</option><option value="webhook_manual_retry">Retry manual</option>
+          <option value="account_error">Erro conta</option><option value="account_banned">Conta banida</option><option value="account_cooldown">Cooldown</option>
+          <option value="admin_login">Admin login</option><option value="cleanup">Limpeza</option>
+        </select>
+        <button class="b bs bg" onclick="loadLogs()">Atualizar</button>
+        <button class="b bs bd" onclick="clearLogs()">Limpar</button>
+      </div>
+      <div class="ll" id="log-l"></div><div class="empty" id="log-e" style="display:none">Nenhum log</div>
+    </div>
+    <!-- SYSTEM -->
+    <div class="sec" id="p-sys">
+      <h1>Sistema</h1><p class="desc">Informacoes do servidor</p>
+      <div class="sts" id="sys-i"></div>
+    </div>
+  </div>
+</div>
+
+<div class="mbg" id="mbg"><div class="modal" id="mc"></div></div>
+
+<script>
+let T=localStorage.getItem("at")||null,autoRef=null;
+function F(p,o={}){return fetch(p,{...o,headers:{"Content-Type":"application/json","X-Admin-Auth":T,...o.headers}})}
+function fmt(c){if(!c&&c!==0)return"R$ 0,00";const v=(Math.abs(c)/100).toFixed(2),[i,d]=v.split(".");return"R$ "+i.replace(/\B(?=(\d{3})+(?!\d))/g,".")+","+d}
+function fD(s){return s?new Date(s).toLocaleString("pt-BR",{timeZone:"America/Sao_Paulo"}):"-"}
+function fDs(s){return s?new Date(s).toLocaleDateString("pt-BR",{day:"2-digit",month:"2-digit",year:"2-digit",timeZone:"America/Sao_Paulo"}):"-"}
+function esc(s){if(typeof s!=="string")return"";const d=document.createElement("div");d.textContent=s;return d.innerHTML}
+function stB(s){const m={pending:"y",depix_sent:"g",paid:"g",expired:"r",canceled:"r",error:"r",refunded:"bl",under_review:"o",delayed:"o"};
+const l={pending:"Pendente",depix_sent:"Pago",paid:"Pago",expired:"Expirado",canceled:"Cancelado",error:"Erro",refunded:"Reembolsado",under_review:"Analise",delayed:"Atrasado"};
+return`<span class="badge ${m[s]||"gr"}">${l[s]||s}</span>`}
+function logB(t){const m={pix_created:["PIX","g"],pix_status_changed:["Status","bl"],webhook_sent:["WH","bl"],webhook_retry:["Retry","y"],webhook_manual_retry:["Manual","o"],webhook_test:["Teste","gr"],
+account_error:["Erro","r"],account_banned:["Banida","r"],account_cooldown:["CD","y"],account_added:["Conta+","g"],account_registered:["Reg","g"],account_verified:["Verif","g"],
+account_toggled:["Toggle","y"],account_deleted:["Del","r"],account_test_login:["Login","bl"],account_updated:["Edit","bl"],
+key_created:["Key+","g"],key_toggled:["Key","y"],key_deleted:["Key-","r"],key_secret_regen:["Regen","o"],admin_login:["Admin","bl"],poller_error:["Poller","r"],cleanup:["Cleanup","gr"]};
+const[l,c]=m[t]||[t,"gr"];return`<span class="badge ${c}">${l}</span>`}
+
+// Nav
+document.querySelectorAll(".nv[data-p]").forEach(b=>{b.addEventListener("click",()=>{
+  document.querySelectorAll(".nv").forEach(n=>n.classList.remove("a"));b.classList.add("a");
+  document.querySelectorAll(".sec").forEach(s=>s.classList.remove("a"));document.getElementById("p-"+b.dataset.p).classList.add("a");
+  const fn={ov:loadOv,acc:loadAcc,keys:loadKeys,txs:loadTxs,logs:loadLogs,sys:loadSys};if(fn[b.dataset.p])fn[b.dataset.p]();
+  // Auto-refresh for overview
+  clearInterval(autoRef);if(b.dataset.p==="ov")startAutoRef();
+})});
+
+function startAutoRef(){autoRef=setInterval(loadOv,15000);document.getElementById("ar-badge").textContent="Auto-refresh 15s";}
+
+// Login
+async function doLogin(){
+  const u=document.getElementById("lu").value.trim(),p=document.getElementById("lp").value,m=document.getElementById("lm");
+  if(!u||!p){m.textContent="Preencha os campos";m.className="msg e";return}
+  try{const r=await fetch("/api/admin/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({user:u,pass:p})});
+  const d=await r.json();if(!r.ok){m.textContent=d.error;m.className="msg e";return}
+  T=d.token;localStorage.setItem("at",T);enter();}catch{m.textContent="Sem conexao";m.className="msg e"}}
+document.getElementById("lb").addEventListener("click",doLogin);
+document.getElementById("lu").addEventListener("keydown",e=>{if(e.key==="Enter")doLogin()});
+document.getElementById("lp").addEventListener("keydown",e=>{if(e.key==="Enter")doLogin()});
+document.getElementById("lo").addEventListener("click",()=>{T=null;localStorage.removeItem("at");clearInterval(autoRef);document.getElementById("aw").classList.remove("a");document.getElementById("lw").style.display="flex"});
+function enter(){document.getElementById("lw").style.display="none";document.getElementById("aw").classList.add("a");loadOv();startAutoRef()}
+if(T)F("/api/admin/overview").then(r=>{if(r.ok)enter();else{T=null;localStorage.removeItem("at")}}).catch(()=>{});
+
+// OVERVIEW
+async function loadOv(){try{const r=await F("/api/admin/overview"),d=await r.json();
+document.getElementById("ov-s").innerHTML=`
+  <div class="st"><div class="st-l">Contas ativas</div><div class="st-v g">${d.accounts.active}</div><div class="st-s">${d.accounts.total} total, ${d.accounts.onCooldown} cooldown</div></div>
+  <div class="st"><div class="st-l">TX hoje</div><div class="st-v">${d.today.transactions}</div><div class="st-s">${d.today.paid} pagas</div></div>
+  <div class="st"><div class="st-l">Volume hoje</div><div class="st-v g">${fmt(d.volume.today)}</div></div>
+  <div class="st"><div class="st-l">Volume total</div><div class="st-v">${fmt(d.volume.total)}</div></div>
+  <div class="st"><div class="st-l">Pendentes</div><div class="st-v y">${d.transactions.pending}</div></div>
+  <div class="st"><div class="st-l">Webhook rate</div><div class="st-v ${d.webhooks.rate>=80?"g":d.webhooks.rate>=50?"y":"r"}">${d.webhooks.rate}%</div><div class="st-s">${d.webhooks.failed} falhados na fila</div></div>
+  <div class="st"><div class="st-l">API Keys</div><div class="st-v bl">${d.apiKeys.active}</div></div>
+  <div class="st"><div class="st-l">WH hoje</div><div class="st-v bl">${d.today.webhooks}</div></div>`;
+// Chart
+const ch=d.chartData||[];const mx=Math.max(...ch.map(c=>c.volume),1);
+document.getElementById("ov-chart").innerHTML=ch.map(c=>{const p=Math.round(c.volume/mx*100);
+return`<div class="cr"><span class="cl">${c.label}</span><div class="cb"><div class="cf" style="width:${p}%"></div>${c.volume>0?`<span class="cv">${fmt(c.volume)} (${c.paid})</span>`:""}</div></div>`}).join("");
+document.getElementById("ov-top").innerHTML=(d.topAccounts||[]).map(a=>{const cv=a.tx_count>0?Math.round((a.tx_paid/a.tx_count)*100):0;
+return`<tr><td>${esc(a.email)}${a.last_error?`<span class="err-tag">${esc(a.last_error).slice(0,30)}</span>`:""}</td><td>${a.tx_count} <span style="font-size:10px;color:#3a4a5a">(${a.tx_paid} pagas)</span></td><td><span class="badge ${cv>=70?"g":cv>=40?"y":"r"}">${cv}%</span></td><td>${fmt(a.volume)}</td><td><span class="badge ${a.is_active?"g":"r"}">${a.is_active?"Ativa":"Inativa"}</span></td></tr>`}).join("")||'<tr><td colspan="5" class="empty">Nenhuma</td></tr>';
+}catch{}}
+
+// ACCOUNTS
+let rrEnabled=true;
+async function loadAccSettings(){try{const r=await F("/api/admin/settings"),d=await r.json();rrEnabled=d.roundRobin;
+document.getElementById("rr-label").textContent=`Round-robin: ${rrEnabled?"ON":"OFF"}`;
+document.getElementById("rr-toggle").textContent=rrEnabled?"Desligar":"Ligar";
+document.getElementById("rr-toggle").className=`b bs ${rrEnabled?"bw":""}`;
+}catch{}}
+async function toggleRR(){await F("/api/admin/settings",{method:"PATCH",body:JSON.stringify({roundRobin:!rrEnabled})});loadAccSettings();loadAcc()}
+
+async function loadAcc(){loadAccSettings();try{const r=await F("/api/admin/accounts"),d=await r.json();
+const tb=document.getElementById("acc-tb"),em=document.getElementById("acc-e");
+if(!d.accounts.length){tb.innerHTML="";em.style.display="block";return}em.style.display="none";
+const total=d.accounts.length;
+tb.innerHTML=d.accounts.map((a,i)=>{
+const errHtml=a.lastError?`<br><span class="err-tag" title="${esc(a.lastError)}\n${fD(a.lastErrorAt)}">${esc(a.lastError).slice(0,25)}...</span>`:"";
+return`<tr>
+<td style="text-align:center">
+  <div style="display:flex;flex-direction:column;align-items:center;gap:2px">
+    ${i>0?`<button class="b bs bg" onclick="moveAcc(${a.id},'up')" style="padding:2px 6px;font-size:10px">&#9650;</button>`:""}
+    <span style="font-size:12px;font-weight:600;color:#8a9bb0">${i+1}</span>
+    ${i<total-1?`<button class="b bs bg" onclick="moveAcc(${a.id},'down')" style="padding:2px 6px;font-size:10px">&#9660;</button>`:""}
+  </div>
+</td>
+<td><strong>${esc(a.email)}</strong><br><span style="font-size:10px;color:#3a4a5a">${esc(a.nome)}</span>${errHtml}</td>
+<td class="mono">${esc(a.usuario)}</td>
+<td><span class="mono trunc" title="${esc(a.depixAddress)}">${a.depixAddress?a.depixAddress.slice(0,12)+"...":"-"}</span></td>
+<td>${a.txCount} <span style="font-size:10px;color:#3a4a5a">(${a.txPaid} pagas)</span></td>
+<td><span class="badge ${a.conversionRate>=70?"g":a.conversionRate>=40?"y":"r"}">${a.conversionRate}%</span></td>
+<td>${fmt(a.volume)}</td>
+<td><span class="badge ${a.isActive?"g":"r"}">${a.isActive?"Ativa":"Inativa"}</span></td>
+<td><div class="acts">
+<button class="b bs" onclick="editAcc(${a.id})">Editar</button>
+<button class="b bs bb" onclick="testAcc(${a.id})">Testar PIX</button>
+<button class="b bs ${a.isActive?"bw":"bg"}" onclick="toggleAcc(${a.id})">${a.isActive?"Desat.":"Ativar"}</button>
+${a.lastError?`<button class="b bs bg" onclick="clearErr(${a.id})">Limpar erro</button>`:""}
+<button class="b bs bd" onclick="delAcc(${a.id},'${esc(a.email)}')">Excluir</button>
+</div></td></tr>`}).join("");
+const sel=document.getElementById("txf-acc"),cur=sel.value;
+sel.innerHTML='<option value="">Conta</option>'+d.accounts.map(a=>`<option value="${a.id}">${esc(a.email)}</option>`).join("");sel.value=cur;
+}catch{}}
+
+async function moveAcc(id,dir){await F(`/api/admin/accounts/${id}/move`,{method:"POST",body:JSON.stringify({direction:dir})});loadAcc()}
+
+async function editAcc(id){const r=await F("/api/admin/accounts"),d=await r.json(),a=d.accounts.find(x=>x.id===id);if(!a)return;
+const mc=document.getElementById("mc");
+mc.innerHTML=`<h2>Editar conta</h2><p class="desc">${esc(a.email)}</p><p class="msg" id="mm"></p>
+<div class="fr"><div><label>Nome</label><input id="e-nome" value="${esc(a.nome)}"/></div><div><label>Email</label><input id="e-email" value="${esc(a.email)}"/></div></div>
+<div class="fr"><div><label>Usuario</label><input id="e-user" value="${esc(a.usuario)}"/></div><div><label>Senha</label><input id="e-pass" type="password" placeholder="Vazio = manter"/></div></div>
+<div class="fr"><div><label>WhatsApp</label><input id="e-wpp" value="${esc(a.whatsapp||"")}"/></div><div><label>Endereco DePix</label><input id="e-addr" value="${esc(a.depixAddress||"")}"/></div></div>
+<div style="display:flex;gap:6px;margin-top:6px"><button class="b" onclick="saveAcc(${id})">Salvar</button><button class="b bg" onclick="closeM()">Cancelar</button></div>`;
+document.getElementById("mbg").classList.add("a")}
+
+async function saveAcc(id){const mm=document.getElementById("mm"),body={};
+const f={nome:"e-nome",email:"e-email",usuario:"e-user",whatsapp:"e-wpp",depixAddress:"e-addr"};
+for(const[k,eid]of Object.entries(f)){const v=document.getElementById(eid).value.trim();if(v)body[k]=v}
+const s=document.getElementById("e-pass").value;if(s)body.senha=s;
+const r=await F(`/api/admin/accounts/${id}`,{method:"PATCH",body:JSON.stringify(body)});
+if(!r.ok){const d=await r.json();mm.textContent=d.error;mm.className="msg e";return}closeM();loadAcc()}
+
+async function testAcc(id){
+  const mc=document.getElementById("mc"),mb=document.getElementById("mbg");
+  mc.innerHTML=`<h2>Testando conta...</h2><p style="text-align:center;color:#8a9bb0;padding:20px">Fazendo login e gerando PIX de R$ 5,00...</p>`;
+  mb.classList.add("a");
+  try{
+    const r=await F(`/api/admin/accounts/${id}/test-pix`,{method:"POST"});const d=await r.json();
+    if(d.success){
+      mc.innerHTML=`<h2 style="color:#38e3ac">Teste OK!</h2>
+        <p style="text-align:center;color:#8a9bb0;font-size:12px;margin-bottom:16px">Login e geracao de PIX funcionando. QR Code gerado (R$ 5,00):</p>
+        <div style="text-align:center;margin-bottom:16px"><div style="background:#0a0f14;border-radius:12px;padding:16px;display:inline-block"><img src="${esc(d.qrImageUrl)}" style="width:200px;height:200px;border-radius:8px"/></div></div>
+        <label>Codigo PIX (copia e cola)</label>
+        <div class="mono" style="background:#0a0f14;padding:10px;border-radius:8px;word-break:break-all;font-size:10px;color:#8a9bb0;max-height:80px;overflow-y:auto;margin-bottom:10px;cursor:pointer;border:1px solid #1e2a36" onclick="navigator.clipboard.writeText('${esc(d.qrCopyPaste)}')" title="Clique para copiar">${esc(d.qrCopyPaste)}</div>
+        <p style="font-size:10px;color:#3a4a5a;margin-bottom:12px">ID: ${esc(d.id)}</p>
+        <div style="display:flex;gap:6px"><button class="b" onclick="navigator.clipboard.writeText('${esc(d.qrCopyPaste)}')">Copiar codigo</button><button class="b bg" onclick="closeM()">Fechar</button></div>`;
+    } else {
+      mc.innerHTML=`<h2 style="color:#ff6b6b">Teste falhou</h2>
+        <p style="text-align:center;color:#8a9bb0;font-size:13px;padding:20px">${esc(d.error||"Erro desconhecido")}</p>
+        <button class="b bg" onclick="closeM()" style="width:100%">Fechar</button>`;
+    }
+  }catch(e){
+    mc.innerHTML=`<h2 style="color:#ff6b6b">Erro</h2><p style="text-align:center;color:#8a9bb0;padding:20px">Sem conexao</p><button class="b bg" onclick="closeM()" style="width:100%">Fechar</button>`;
+  }
+  loadAcc();
+}
+async function toggleAcc(id){await F(`/api/admin/accounts/${id}/toggle`,{method:"POST"});loadAcc()}
+async function clearErr(id){await F(`/api/admin/accounts/${id}/clear-error`,{method:"POST"});loadAcc()}
+async function delAcc(id,e){if(!confirm(`Excluir ${e}?`))return;await F(`/api/admin/accounts/${id}`,{method:"DELETE"});loadAcc()}
+
+// KEYS
+async function loadKeys(){try{const r=await F("/api/admin/keys"),d=await r.json();
+const tb=document.getElementById("key-tb"),em=document.getElementById("key-e");
+if(!d.keys.length){tb.innerHTML="";em.style.display="block";return}em.style.display="none";
+tb.innerHTML=d.keys.map(k=>`<tr>
+<td><strong>${esc(k.label)}</strong></td>
+<td><span class="mono reveal" onclick="this.classList.toggle('shown')" title="Clique para revelar">${esc(k.keyPreview)}</span></td>
+<td>${k.webhookUrl?`<span class="trunc" style="font-size:10px;max-width:100px">${esc(k.webhookUrl)}</span>`:'<span style="color:#3a4a5a">-</span>'}</td>
+<td>${k.totalRequests.toLocaleString()}</td>
+<td>${k.rateLimit}/min</td>
+<td><span class="badge ${k.isActive?"g":"r"}">${k.isActive?"Ativa":"Bloqueada"}</span></td>
+<td><div class="acts">
+<button class="b bs" onclick="editKey(${k.id})">Editar</button>
+${k.webhookUrl?`<button class="b bs bb" onclick="testWh(${k.id})">WH</button>`:""}
+<button class="b bs bw" onclick="regenSec(${k.id})">Regen</button>
+<button class="b bs ${k.isActive?"bw":"bg"}" onclick="toggleKey(${k.id})">${k.isActive?"Bloq.":"Ativar"}</button>
+<button class="b bs bd" onclick="delKey(${k.id})">Excluir</button>
+</div></td></tr>`).join("")}catch{}}
+
+async function editKey(id){const r=await F("/api/admin/keys"),d=await r.json(),k=d.keys.find(x=>x.id===id);if(!k)return;
+document.getElementById("mc").innerHTML=`<h2>Editar API Key</h2><p class="msg" id="mm"></p>
+<label>Label</label><input id="ek-label" value="${esc(k.label)}"/>
+<label>Webhook URL</label><input id="ek-wh" value="${esc(k.webhookUrl||"")}"/>
+<label>Rate Limit (req/min)</label><input id="ek-rl" type="number" value="${k.rateLimit||60}"/>
+<div style="display:flex;gap:6px;margin-top:6px"><button class="b" onclick="saveKey(${id})">Salvar</button><button class="b bg" onclick="closeM()">Cancelar</button></div>`;
+document.getElementById("mbg").classList.add("a")}
+
+async function saveKey(id){const body={label:document.getElementById("ek-label").value.trim(),webhookUrl:document.getElementById("ek-wh").value.trim(),rateLimit:parseInt(document.getElementById("ek-rl").value)||60};
+const r=await F(`/api/admin/keys/${id}`,{method:"PATCH",body:JSON.stringify(body)});if(!r.ok){const d=await r.json();document.getElementById("mm").textContent=d.error;document.getElementById("mm").className="msg e";return}closeM();loadKeys()}
+
+async function toggleKey(id){await F(`/api/admin/keys/${id}/toggle`,{method:"POST"});loadKeys()}
+async function delKey(id){if(!confirm("Excluir key?"))return;await F(`/api/admin/keys/${id}`,{method:"DELETE"});loadKeys()}
+async function testWh(id){const r=await F(`/api/admin/keys/${id}/test-webhook`,{method:"POST"});const d=await r.json();alert(d.success?"OK! Status: "+d.status:"Falha: "+(d.error||"Erro"))}
+async function regenSec(id){if(!confirm("Regenerar webhook secret? O antigo para de funcionar."))return;
+const r=await F(`/api/admin/keys/${id}/regen-secret`,{method:"POST"});const d=await r.json();
+if(d.secret){document.getElementById("mc").innerHTML=`<h2>Novo Secret</h2>
+<div class="mono" style="background:#0a0f14;padding:10px;border-radius:8px;word-break:break-all;color:#ffc107;cursor:pointer;border:1px solid #1e2a36;margin-bottom:12px" onclick="navigator.clipboard.writeText('${esc(d.secret)}')">${esc(d.secret)}</div>
+<p style="font-size:11px;color:#ff6b6b;margin-bottom:12px">Salve agora! Nao sera exibido novamente.</p>
+<button class="b" onclick="closeM();loadKeys()">Fechar</button>`;document.getElementById("mbg").classList.add("a")}}
+
+// TRANSACTIONS
+let txOff=0;
+async function loadTxs(off=0){txOff=off;try{
+const st=document.getElementById("txf-st").value,acc=document.getElementById("txf-acc").value,q=document.getElementById("txf-q").value.trim(),
+from=document.getElementById("txf-from").value,to=document.getElementById("txf-to").value;
+let url=`/api/admin/transactions?limit=50&offset=${off}`;
+if(st)url+=`&status=${st}`;if(acc)url+=`&accountId=${acc}`;if(q)url+=`&search=${encodeURIComponent(q)}`;if(from)url+=`&from=${from}`;if(to)url+=`&to=${to}`;
+const r=await F(url),d=await r.json();
+const tb=document.getElementById("tx-tb"),em=document.getElementById("tx-e");
+if(!d.transactions.length){tb.innerHTML="";em.style.display="block";document.getElementById("tx-pg").innerHTML="";return}em.style.display="none";
+tb.innerHTML=d.transactions.map(t=>`<tr>
+<td><span class="mono trunc" style="max-width:100px">${esc((t.pixId||"").slice(0,14))}...</span>${t.externalId?`<br><span style="font-size:10px;color:#3a4a5a">${esc(t.externalId)}</span>`:""}</td>
+<td style="font-size:11px">${esc(t.accountEmail||"-")}</td>
+<td><strong>${fmt(t.amountCents)}</strong></td>
+<td>${stB(t.status)}</td>
+<td style="font-size:11px">${esc(t.payerName||"-")}</td>
+<td>${t.webhookSent?`<span class="badge g">OK</span>`:t.webhookAttempts>0?`<span class="badge r">#${t.webhookAttempts}</span>`:'<span style="color:#3a4a5a">-</span>'}</td>
+<td style="font-size:10px">${fD(t.createdAt)}</td>
+<td><button class="b bs bg" onclick="txDetail(${t.id})">Ver</button></td>
+</tr>`).join("");
+const pg=document.getElementById("tx-pg"),pages=Math.ceil(d.total/50),cur=Math.floor(off/50);
+if(pages<=1){pg.innerHTML="";return}
+let h="";if(cur>0)h+=`<button class="b bs bg" onclick="loadTxs(${(cur-1)*50})">Ant</button>`;
+h+=`<span style="font-size:11px;color:#8a9bb0;padding:5px">${cur+1}/${pages} (${d.total})</span>`;
+if(cur<pages-1)h+=`<button class="b bs bg" onclick="loadTxs(${(cur+1)*50})">Prox</button>`;pg.innerHTML=h;
+}catch{}}
+
+async function txDetail(id){const r=await F(`/api/admin/transactions/${id}`),t=await r.json();
+if(r.ok){document.getElementById("mc").innerHTML=`<h2>Transacao #${t.id}</h2>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px;margin-bottom:16px">
+<div><label>PIX ID</label><div class="mono" style="word-break:break-all">${esc(t.pixId)}</div></div>
+<div><label>External ID</label><div>${esc(t.externalId||"-")}</div></div>
+<div><label>Conta</label><div>${esc(t.accountEmail||"-")} (${esc(t.accountNome||"")})</div></div>
+<div><label>API Key</label><div class="mono" style="font-size:10px">${esc(t.apiKey||"-")}</div></div>
+<div><label>Valor</label><div><strong>${fmt(t.amountCents)}</strong></div></div>
+<div><label>Status</label><div>${stB(t.status)}</div></div>
+<div><label>Pagador</label><div>${esc(t.payerName||"-")}</div></div>
+<div><label>Criado</label><div>${fD(t.createdAt)}</div></div>
+<div><label>Atualizado</label><div>${fD(t.updatedAt)}</div></div>
+<div><label>Webhook</label><div>${t.webhookSent?'<span class="badge g">Enviado</span>':'<span class="badge r">Pendente</span>'} (${t.webhookAttempts} tentativas)</div></div>
+<div><label>Webhook Status</label><div>${esc(t.webhookStatus||"-")}</div></div>
+<div><label>Proximo retry</label><div>${t.webhookNextRetry?fD(t.webhookNextRetry):"-"}</div></div>
+</div>
+${t.webhookPayload?`<label>Webhook Payload</label><pre style="background:#0a0f14;padding:10px;border-radius:8px;font-size:10px;color:#8a9bb0;overflow-x:auto;margin-bottom:12px">${esc(JSON.stringify(t.webhookPayload,null,2))}</pre>`:""}
+<div style="display:flex;gap:6px">
+${!t.webhookSent?`<button class="b bs bb" onclick="retryWh(${t.id})">Reenviar webhook</button>`:""}
+<button class="b bg" onclick="closeM()">Fechar</button></div>`;
+document.getElementById("mbg").classList.add("a")}}
+
+async function retryWh(id){const r=await F(`/api/admin/transactions/${id}/retry-webhook`,{method:"POST"});const d=await r.json();
+alert(d.success?"Webhook enviado! Status: "+d.status:"Falha: "+(d.error||"Erro"));closeM();loadTxs(txOff)}
+
+function exportCSV(){const st=document.getElementById("txf-st").value,acc=document.getElementById("txf-acc").value,
+from=document.getElementById("txf-from").value,to=document.getElementById("txf-to").value;
+let url=`/api/admin/transactions/export/csv?`;if(st)url+=`status=${st}&`;if(acc)url+=`accountId=${acc}&`;if(from)url+=`from=${from}&`;if(to)url+=`to=${to}&`;
+const a=document.createElement("a");a.href=url;a.download="transacoes.csv";a.click()}
+
+// LOGS
+async function loadLogs(){try{const t=document.getElementById("logf").value;
+const r=await F(`/api/admin/logs?limit=200${t?"&type="+t:""}`),d=await r.json();
+const l=document.getElementById("log-l"),em=document.getElementById("log-e");
+if(!d.logs.length){l.innerHTML="";em.style.display="block";return}em.style.display="none";
+l.innerHTML=d.logs.map(l=>`<div class="log"><span class="log-t">${fD(l.createdAt)}</span>${logB(l.type)}<span class="log-d">${esc(l.message)}</span></div>`).join("")}catch{}}
+async function clearLogs(){if(!confirm("Limpar logs?"))return;await F("/api/admin/logs",{method:"DELETE"});loadLogs()}
+
+// SYSTEM
+async function loadSys(){try{const r=await F("/api/admin/system"),d=await r.json();
+const h=Math.floor(d.uptime/3600),m=Math.floor((d.uptime%3600)/60),s=Math.floor(d.uptime%60);
+document.getElementById("sys-i").innerHTML=`
+<div class="st"><div class="st-l">Uptime</div><div class="st-v">${h}h ${m}m ${s}s</div></div>
+<div class="st"><div class="st-l">Memoria</div><div class="st-v">${d.memoryMB} MB</div></div>
+<div class="st"><div class="st-l">Node.js</div><div class="st-v">${d.nodeVersion}</div></div>
+<div class="st"><div class="st-l">Plataforma</div><div class="st-v">${d.platform}</div></div>
+<div class="st"><div class="st-l">Banco</div><div class="st-v">${d.dbSizeKB} KB</div></div>
+<div class="st"><div class="st-l">WH pendentes</div><div class="st-v ${d.pendingWebhookRetries>0?"r":""}">${d.pendingWebhookRetries}</div></div>`}catch{}}
+
+// MODALS
+function openM(type){const mc=document.getElementById("mc"),mb=document.getElementById("mbg");
+if(type==="add"){mc.innerHTML=`<h2>Adicionar conta</h2><p class="msg" id="mm"></p>
+<div class="fr"><div><label>Nome</label><input id="m-nome" placeholder="Nome"/></div><div><label>Email</label><input id="m-email" placeholder="email"/></div></div>
+<div class="fr"><div><label>Usuario</label><input id="m-user" placeholder="usuario"/></div><div><label>Senha</label><input id="m-pass" type="password" placeholder="Senha"/></div></div>
+<div class="fr"><div><label>WhatsApp</label><input id="m-wpp" placeholder="+5511..."/></div><div><label>Endereco DePix</label><input id="m-addr" placeholder="lq1qq..."/></div></div>
+<div style="display:flex;gap:6px;margin-top:6px"><button class="b" onclick="subAdd()">Adicionar</button><button class="b bg" onclick="closeM()">Cancelar</button></div>`}
+else if(type==="reg"){mc.innerHTML=`<h2>Criar conta na DePix</h2><p class="msg" id="mm"></p>
+<div class="fr"><div><label>Nome</label><input id="m-nome" placeholder="Nome completo"/></div><div><label>Email</label><input id="m-email" placeholder="email"/></div></div>
+<div class="fr"><div><label>Usuario</label><input id="m-user" placeholder="usuario"/></div><div><label>Senha</label><input id="m-pass" type="password" placeholder="Min 8"/></div></div>
+<div class="fr"><div><label>WhatsApp</label><input id="m-wpp" placeholder="+5511..."/></div><div><label>Endereco DePix</label><input id="m-addr" placeholder="(opcional)"/></div></div>
+<div style="display:flex;gap:6px;margin-top:6px"><button class="b" onclick="subReg()">Criar</button><button class="b bg" onclick="closeM()">Cancelar</button></div>`}
+else if(type==="key"){mc.innerHTML=`<h2>Criar API Key</h2><p class="msg" id="mm"></p>
+<label>Label</label><input id="m-label" placeholder="Ex: Minha loja"/>
+<label>Webhook URL (opcional)</label><input id="m-whurl" placeholder="https://..."/>
+<label>Rate Limit (req/min)</label><input id="m-rl" type="number" value="60"/>
+<div style="display:flex;gap:6px;margin-top:6px"><button class="b" onclick="subKey()">Criar</button><button class="b bg" onclick="closeM()">Cancelar</button></div>`}
+else if(type==="verify"){mc.innerHTML=`<h2>Verificar email</h2><p class="msg" id="mm"></p>
+<label>Codigo (6 digitos)</label><input id="m-code" placeholder="000000" maxlength="6"/>
+<div style="display:flex;gap:6px;margin-top:6px"><button class="b" id="mv-btn">Verificar</button><button class="b bg" onclick="closeM()">Cancelar</button></div>`}
+mb.classList.add("a")}
+function closeM(){document.getElementById("mbg").classList.remove("a")}
+document.getElementById("mbg").addEventListener("click",e=>{if(e.target===e.currentTarget)closeM()});
+
+async function subAdd(){const mm=document.getElementById("mm"),d={nome:document.getElementById("m-nome").value.trim(),email:document.getElementById("m-email").value.trim(),
+usuario:document.getElementById("m-user").value.trim(),senha:document.getElementById("m-pass").value,whatsapp:document.getElementById("m-wpp").value.trim(),depixAddress:document.getElementById("m-addr").value.trim()};
+if(!d.nome||!d.email||!d.usuario||!d.senha){mm.textContent="Preencha campos obrigatorios";mm.className="msg e";return}
+const r=await F("/api/admin/accounts",{method:"POST",body:JSON.stringify(d)});if(!r.ok){const e=await r.json();mm.textContent=e.error;mm.className="msg e";return}closeM();loadAcc()}
+
+let pendId=null;
+async function subReg(){const mm=document.getElementById("mm"),d={nome:document.getElementById("m-nome").value.trim(),email:document.getElementById("m-email").value.trim(),
+usuario:document.getElementById("m-user").value.trim(),senha:document.getElementById("m-pass").value,whatsapp:document.getElementById("m-wpp").value.trim(),depixAddress:document.getElementById("m-addr").value.trim()};
+if(!d.nome||!d.email||!d.usuario||!d.senha||!d.whatsapp){mm.textContent="Preencha todos";mm.className="msg e";return}
+if(d.senha.length<8){mm.textContent="Senha min 8";mm.className="msg e";return}
+const r=await F("/api/admin/accounts/register",{method:"POST",body:JSON.stringify(d)});const j=await r.json();
+if(!r.ok){mm.textContent=j.error;mm.className="msg e";return}
+pendId=j.id;closeM();openM("verify");
+document.getElementById("mv-btn").onclick=async()=>{const code=document.getElementById("m-code").value.trim(),mm2=document.getElementById("mm");
+if(!code||code.length!==6){mm2.textContent="Codigo 6 digitos";mm2.className="msg e";return}
+const r2=await F(`/api/admin/accounts/${pendId}/verify`,{method:"POST",body:JSON.stringify({codigo:code})});
+if(!r2.ok){const e=await r2.json();mm2.textContent=e.error;mm2.className="msg e";return}closeM();loadAcc()}}
+
+async function subKey(){const mm=document.getElementById("mm"),d={label:document.getElementById("m-label").value.trim(),webhookUrl:document.getElementById("m-whurl").value.trim(),rateLimit:parseInt(document.getElementById("m-rl").value)||60};
+const r=await F("/api/admin/keys",{method:"POST",body:JSON.stringify(d)});const j=await r.json();
+if(!r.ok){mm.textContent=j.error;mm.className="msg e";return}
+document.getElementById("mc").innerHTML=`<h2>API Key criada!</h2>
+<label>API Key</label><div class="mono" style="background:#0a0f14;padding:10px;border-radius:8px;word-break:break-all;cursor:pointer;border:1px solid #1e2a36;margin-bottom:10px" onclick="navigator.clipboard.writeText('${esc(j.key)}')">${esc(j.key)}</div>
+<label>Webhook Secret</label><div class="mono" style="background:#0a0f14;padding:10px;border-radius:8px;word-break:break-all;color:#ffc107;cursor:pointer;border:1px solid #1e2a36;margin-bottom:10px" onclick="navigator.clipboard.writeText('${esc(j.secret)}')">${esc(j.secret)}</div>
+<p style="font-size:11px;color:#ff6b6b;margin-bottom:12px">Salve o secret agora!</p>
+<button class="b" onclick="closeM();loadKeys()">Fechar</button>`}
+</script>
+</body>
+</html>

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PixHub</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:-apple-system,sans-serif;background:#0a0f14;color:#e0e0e0;min-height:100vh;display:flex;align-items:center;justify-content:center}
+    .card{background:#111921;border:1px solid #1e2a36;border-radius:16px;padding:32px;width:100%;max-width:400px;margin:16px;text-align:center}
+    h1{font-size:22px;color:#38e3ac;margin-bottom:8px}
+    p{color:#8a9bb0;font-size:14px;line-height:1.6}
+    .badge{display:inline-block;padding:4px 12px;border-radius:8px;font-size:12px;font-weight:600;margin-top:16px}
+    .badge.ok{background:rgba(56,227,172,.15);color:#38e3ac}
+    .badge.err{background:rgba(255,107,107,.15);color:#ff6b6b}
+    code{background:#0a0f14;padding:2px 6px;border-radius:4px;font-size:12px;color:#38e3ac}
+    a{color:#38e3ac}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>PixHub API</h1>
+    <p>Servico intermediario para pagamentos PIX via DePix.</p>
+    <p style="margin-top:12px">Use a <code>API v1</code> para integrar. Documentacao disponivel no <a href="/admin">painel admin</a>.</p>
+    <div id="status"></div>
+  </div>
+  <script>
+    fetch("/v1/health").then(r=>r.json()).then(d=>{
+      document.getElementById("status").innerHTML=`<span class="badge ${d.status==="healthy"?"ok":"err"}">${d.status} — ${d.accounts.active} contas ativas</span>`;
+    }).catch(()=>{document.getElementById("status").innerHTML='<span class="badge err">Offline</span>'});
+  </script>
+</body>
+</html>
