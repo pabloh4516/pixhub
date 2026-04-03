@@ -118,6 +118,74 @@
     <!-- KEYS -->
     <div class="sec" id="p-keys">
       <h1>API Keys</h1><p class="desc">Chaves de API para integracao</p>
+
+      <!-- API URL + Docs -->
+      <div style="background:#0d1117;border:1px solid #1e2a36;border-radius:10px;padding:16px;margin-bottom:20px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <div>
+            <div style="font-size:10px;color:#8a9bb0;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">URL Base da API</div>
+            <div class="mono" style="font-size:15px;cursor:pointer" onclick="navigator.clipboard.writeText(apiBaseUrl)" title="Copiar" id="api-url-display"></div>
+          </div>
+          <button class="b bs" onclick="navigator.clipboard.writeText(apiBaseUrl)">Copiar URL</button>
+        </div>
+        <div style="font-size:11px;color:#8a9bb0;margin-bottom:10px">Envie o header <span class="mono" style="font-size:11px;color:#ffc107">X-API-Key: dpx_xxxxx</span> em todas as requisicoes.</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div style="background:#111921;border:1px solid #1e2a36;border-radius:8px;padding:10px">
+            <div style="font-size:10px;color:#38e3ac;font-weight:700;margin-bottom:4px">POST /v1/pix/create</div>
+            <div style="font-size:10px;color:#8a9bb0">Gerar QR Code PIX</div>
+            <div style="font-size:9px;color:#3a4a5a;margin-top:4px;font-family:monospace">{"amountInCents": 5000}</div>
+          </div>
+          <div style="background:#111921;border:1px solid #1e2a36;border-radius:8px;padding:10px">
+            <div style="font-size:10px;color:#6495ed;font-weight:700;margin-bottom:4px">GET /v1/pix/status/:id</div>
+            <div style="font-size:10px;color:#8a9bb0">Consultar status do PIX</div>
+          </div>
+          <div style="background:#111921;border:1px solid #1e2a36;border-radius:8px;padding:10px">
+            <div style="font-size:10px;color:#6495ed;font-weight:700;margin-bottom:4px">GET /v1/pix/transactions</div>
+            <div style="font-size:10px;color:#8a9bb0">Listar transacoes</div>
+          </div>
+          <div style="background:#111921;border:1px solid #1e2a36;border-radius:8px;padding:10px">
+            <div style="font-size:10px;color:#6495ed;font-weight:700;margin-bottom:4px">GET /v1/health</div>
+            <div style="font-size:10px;color:#8a9bb0">Health check</div>
+          </div>
+        </div>
+        <details style="margin-top:12px">
+          <summary style="font-size:11px;color:#38e3ac;cursor:pointer;font-weight:600">Exemplo com cURL</summary>
+          <pre style="background:#111921;padding:10px;border-radius:8px;font-size:10px;color:#8a9bb0;margin-top:8px;overflow-x:auto;white-space:pre;line-height:1.5" id="curl-example"></pre>
+        </details>
+        <details style="margin-top:8px">
+          <summary style="font-size:11px;color:#38e3ac;cursor:pointer;font-weight:600">Webhook — payload e verificacao</summary>
+          <pre style="background:#111921;padding:10px;border-radius:8px;font-size:10px;color:#8a9bb0;margin-top:8px;overflow-x:auto;white-space:pre;line-height:1.5">// Eventos: payment.confirmed, payment.expired,
+//          payment.canceled, payment.error, payment.refunded
+
+// Headers enviados:
+// X-Webhook-Signature: hmac-sha256 do body
+// X-Webhook-Timestamp: ISO timestamp
+
+// Verificar assinatura (Node.js):
+const crypto = require("crypto");
+const sig = req.headers["x-webhook-signature"];
+const expected = crypto
+  .createHmac("sha256", WEBHOOK_SECRET)
+  .update(JSON.stringify(req.body))
+  .digest("hex");
+if (sig === expected) { /* valido */ }
+
+// Payload:
+{
+  "event": "payment.confirmed",
+  "data": {
+    "id": "019d5052...",
+    "externalId": "pedido_123",
+    "status": "depix_sent",
+    "amountInCents": 5000,
+    "payerName": "JOAO DA SILVA",
+    "createdAt": "2026-04-02T19:30:00"
+  },
+  "timestamp": "2026-04-02T19:31:00Z"
+}</pre>
+        </details>
+      </div>
+
       <div class="toolbar"><button class="b bs" onclick="openM('key')">Criar API Key</button></div>
       <div class="tw"><table><thead><tr><th>Label</th><th>Key</th><th>Webhook</th><th>Requests</th><th>Rate Limit</th><th>Status</th><th>Acoes</th></tr></thead><tbody id="key-tb"></tbody></table></div>
       <div class="empty" id="key-e" style="display:none">Nenhuma API key</div>
@@ -165,6 +233,31 @@
 
 <script>
 let T=localStorage.getItem("at")||null,autoRef=null;
+const apiBaseUrl=window.location.origin;
+
+// Set API URL display and cURL example on load
+document.addEventListener("DOMContentLoaded",()=>{
+  const urlEl=document.getElementById("api-url-display");
+  if(urlEl)urlEl.textContent=apiBaseUrl;
+  const curlEl=document.getElementById("curl-example");
+  if(curlEl)curlEl.textContent=`# Gerar PIX
+curl -X POST ${apiBaseUrl}/v1/pix/create \\
+  -H "Content-Type: application/json" \\
+  -H "X-API-Key: dpx_SUA_API_KEY" \\
+  -d '{"amountInCents": 5000, "externalId": "pedido_123"}'
+
+# Consultar status
+curl ${apiBaseUrl}/v1/pix/status/ID_DO_PIX \\
+  -H "X-API-Key: dpx_SUA_API_KEY"
+
+# Listar transacoes
+curl "${apiBaseUrl}/v1/pix/transactions?limit=50" \\
+  -H "X-API-Key: dpx_SUA_API_KEY"
+
+# Health check
+curl ${apiBaseUrl}/v1/health \\
+  -H "X-API-Key: dpx_SUA_API_KEY"`;
+});
 function F(p,o={}){return fetch(p,{...o,headers:{"Content-Type":"application/json","X-Admin-Auth":T,...o.headers}})}
 function fmt(c){if(!c&&c!==0)return"R$ 0,00";const v=(Math.abs(c)/100).toFixed(2),[i,d]=v.split(".");return"R$ "+i.replace(/\B(?=(\d{3})+(?!\d))/g,".")+","+d}
 function fD(s){return s?new Date(s).toLocaleString("pt-BR",{timeZone:"America/Sao_Paulo"}):"-"}
