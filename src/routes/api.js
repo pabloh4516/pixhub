@@ -70,7 +70,7 @@ router.post("/pix/create", async (req, res) => {
       }
     }
 
-    db.prepare(`
+    const txResult = db.prepare(`
       INSERT INTO transactions (account_id, api_key, pix_id, external_id, amount_cents, status, created_at, updated_at)
       VALUES (?, ?, ?, ?, ?, 'pending', datetime('now'), datetime('now'))
     `).run(usedAccount.id, req.apiKey.key, pix.id, externalId || "", amountInCents);
@@ -78,6 +78,11 @@ router.post("/pix/create", async (req, res) => {
     addLog("pix_created", `PIX ${pix.id.slice(0, 12)}... via conta ${usedAccount.email}`, {
       pixId: pix.id, amountInCents, accountId: usedAccount.id, apiKey: req.apiKey.key.slice(0, 12) + "..."
     });
+
+    // Dispara webhook payment.created
+    const { fireWebhook } = require("../services/webhook");
+    const newTx = db.prepare("SELECT * FROM transactions WHERE id = ?").get(txResult.lastInsertRowid);
+    if (newTx) fireWebhook(newTx, "payment.created");
 
     res.json({
       id: pix.id,
