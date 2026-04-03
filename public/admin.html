@@ -105,13 +105,23 @@
     <!-- ACCOUNTS -->
     <div class="sec" id="p-acc">
       <h1>Contas DePix</h1><p class="desc">Gerenciar contas que processam pagamentos</p>
+
+      <!-- Global settings -->
+      <div style="background:#0d1117;border:1px solid #1e2a36;border-radius:10px;padding:14px;margin-bottom:16px;display:flex;gap:16px;align-items:center;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:11px;color:#8a9bb0" id="rr-label">Round-robin: —</span>
+          <button class="b bs" id="rr-toggle" onclick="toggleRR()">—</button>
+        </div>
+        <div style="flex:1;min-width:200px;display:flex;align-items:center;gap:8px">
+          <span style="font-size:11px;color:#8a9bb0;white-space:nowrap">Endereco Liquid global:</span>
+          <input id="global-addr" placeholder="lq1qq... (usado quando a conta nao tem endereco)" style="margin:0;flex:1;font-size:11px;padding:7px 10px"/>
+          <button class="b bs" onclick="saveGlobalAddr()">Salvar</button>
+        </div>
+      </div>
+
       <div class="toolbar">
         <button class="b bs" onclick="openM('add')">Adicionar conta</button>
         <button class="b bs bb" onclick="openM('reg')">Criar na DePix</button>
-        <span style="margin-left:auto;display:flex;align-items:center;gap:8px">
-          <span style="font-size:11px;color:#8a9bb0" id="rr-label">Round-robin: —</span>
-          <button class="b bs" id="rr-toggle" onclick="toggleRR()">—</button>
-        </span>
       </div>
       <div class="tw"><table><thead><tr><th>#</th><th>Email</th><th>Usuario</th><th>Endereco</th><th>TX</th><th>Conversao</th><th>Volume</th><th>Status</th><th>Acoes</th></tr></thead><tbody id="acc-tb"></tbody></table></div>
       <div class="empty" id="acc-e" style="display:none">Nenhuma conta</div>
@@ -342,8 +352,12 @@ async function loadAccSettings(){try{const r=await F("/api/admin/settings"),d=aw
 document.getElementById("rr-label").textContent=`Round-robin: ${rrEnabled?"ON":"OFF"}`;
 document.getElementById("rr-toggle").textContent=rrEnabled?"Desligar":"Ligar";
 document.getElementById("rr-toggle").className=`b bs ${rrEnabled?"bw":""}`;
+document.getElementById("global-addr").value=d.globalDepixAddress||"";
 }catch{}}
 async function toggleRR(){await F("/api/admin/settings",{method:"PATCH",body:JSON.stringify({roundRobin:!rrEnabled})});loadAccSettings();loadAcc()}
+async function saveGlobalAddr(){const addr=document.getElementById("global-addr").value.trim();
+await F("/api/admin/settings",{method:"PATCH",body:JSON.stringify({globalDepixAddress:addr})});
+document.getElementById("global-addr").style.borderColor="#38e3ac";setTimeout(()=>document.getElementById("global-addr").style.borderColor="",1500)}
 
 async function loadAcc(){loadAccSettings();try{const r=await F("/api/admin/accounts"),d=await r.json();
 const tb=document.getElementById("acc-tb"),em=document.getElementById("acc-e");
@@ -613,12 +627,14 @@ function openM(type){const mc=document.getElementById("mc"),mb=document.getEleme
 if(type==="add"){mc.innerHTML=`<h2>Adicionar conta</h2><p class="msg" id="mm"></p>
 <div class="fr"><div><label>Nome</label><input id="m-nome" placeholder="Nome"/></div><div><label>Email</label><input id="m-email" placeholder="email"/></div></div>
 <div class="fr"><div><label>Usuario</label><input id="m-user" placeholder="usuario"/></div><div><label>Senha</label><input id="m-pass" type="password" placeholder="Senha"/></div></div>
-<div class="fr"><div><label>WhatsApp</label><input id="m-wpp" placeholder="+5511..."/></div><div><label>Endereco DePix</label><input id="m-addr" placeholder="lq1qq..."/></div></div>
+<label>WhatsApp</label><input id="m-wpp" placeholder="+5511999999999"/>
+<p style="font-size:10px;color:#3a4a5a;margin-bottom:10px">O endereco da carteira Liquid pode ser configurado depois, na edicao da conta.</p>
 <div style="display:flex;gap:6px;margin-top:6px"><button class="b" onclick="subAdd()">Adicionar</button><button class="b bg" onclick="closeM()">Cancelar</button></div>`}
 else if(type==="reg"){mc.innerHTML=`<h2>Criar conta na DePix</h2><p class="msg" id="mm"></p>
 <div class="fr"><div><label>Nome</label><input id="m-nome" placeholder="Nome completo"/></div><div><label>Email</label><input id="m-email" placeholder="email"/></div></div>
-<div class="fr"><div><label>Usuario</label><input id="m-user" placeholder="usuario"/></div><div><label>Senha</label><input id="m-pass" type="password" placeholder="Min 8"/></div></div>
-<div class="fr"><div><label>WhatsApp</label><input id="m-wpp" placeholder="+5511..."/></div><div><label>Endereco DePix</label><input id="m-addr" placeholder="(opcional)"/></div></div>
+<div class="fr"><div><label>Usuario</label><input id="m-user" placeholder="usuario"/></div><div><label>Senha</label><input id="m-pass" type="password" placeholder="Min 8 caracteres"/></div></div>
+<label>WhatsApp</label><input id="m-wpp" placeholder="+5511999999999"/>
+<p style="font-size:10px;color:#3a4a5a;margin-bottom:10px">Apos verificar o email, edite a conta para adicionar o endereco da carteira Liquid.</p>
 <div style="display:flex;gap:6px;margin-top:6px"><button class="b" onclick="subReg()">Criar</button><button class="b bg" onclick="closeM()">Cancelar</button></div>`}
 else if(type==="key"){mc.innerHTML=`<h2>Criar API Key</h2><p class="msg" id="mm"></p>
 <label>Label</label><input id="m-label" placeholder="Ex: Minha loja"/>
@@ -633,13 +649,13 @@ function closeM(){document.getElementById("mbg").classList.remove("a")}
 document.getElementById("mbg").addEventListener("click",e=>{if(e.target===e.currentTarget)closeM()});
 
 async function subAdd(){const mm=document.getElementById("mm"),d={nome:document.getElementById("m-nome").value.trim(),email:document.getElementById("m-email").value.trim(),
-usuario:document.getElementById("m-user").value.trim(),senha:document.getElementById("m-pass").value,whatsapp:document.getElementById("m-wpp").value.trim(),depixAddress:document.getElementById("m-addr").value.trim()};
+usuario:document.getElementById("m-user").value.trim(),senha:document.getElementById("m-pass").value,whatsapp:document.getElementById("m-wpp").value.trim()};
 if(!d.nome||!d.email||!d.usuario||!d.senha){mm.textContent="Preencha campos obrigatorios";mm.className="msg e";return}
 const r=await F("/api/admin/accounts",{method:"POST",body:JSON.stringify(d)});if(!r.ok){const e=await r.json();mm.textContent=e.error;mm.className="msg e";return}closeM();loadAcc()}
 
 let pendId=null;
 async function subReg(){const mm=document.getElementById("mm"),d={nome:document.getElementById("m-nome").value.trim(),email:document.getElementById("m-email").value.trim(),
-usuario:document.getElementById("m-user").value.trim(),senha:document.getElementById("m-pass").value,whatsapp:document.getElementById("m-wpp").value.trim(),depixAddress:document.getElementById("m-addr").value.trim()};
+usuario:document.getElementById("m-user").value.trim(),senha:document.getElementById("m-pass").value,whatsapp:document.getElementById("m-wpp").value.trim()};
 if(!d.nome||!d.email||!d.usuario||!d.senha||!d.whatsapp){mm.textContent="Preencha todos";mm.className="msg e";return}
 if(d.senha.length<8){mm.textContent="Senha min 8";mm.className="msg e";return}
 const r=await F("/api/admin/accounts/register",{method:"POST",body:JSON.stringify(d)});const j=await r.json();

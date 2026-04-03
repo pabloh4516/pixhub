@@ -68,6 +68,7 @@ db.exec(`
   );
 
   INSERT OR IGNORE INTO settings (key, value) VALUES ('round_robin', '1');
+  INSERT OR IGNORE INTO settings (key, value) VALUES ('global_depix_address', '');
 
   CREATE TABLE IF NOT EXISTS logs (
     id              INTEGER PRIMARY KEY AUTOINCREMENT,

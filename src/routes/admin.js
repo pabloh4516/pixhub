@@ -293,7 +293,8 @@ router.post("/accounts/:id/move", (req, res) => {
 // ===== SETTINGS =====
 router.get("/settings", (req, res) => {
   res.json({
-    roundRobin: getSetting("round_robin", "1") === "1"
+    roundRobin: getSetting("round_robin", "1") === "1",
+    globalDepixAddress: getSetting("global_depix_address", "")
   });
 });
 
@@ -301,6 +302,10 @@ router.patch("/settings", (req, res) => {
   if (req.body.roundRobin !== undefined) {
     setSetting("round_robin", req.body.roundRobin ? "1" : "0");
     addLog("settings_changed", `Round-robin ${req.body.roundRobin ? "ativado" : "desativado"}`);
+  }
+  if (req.body.globalDepixAddress !== undefined) {
+    setSetting("global_depix_address", req.body.globalDepixAddress);
+    addLog("settings_changed", `Endereco Liquid global atualizado`);
   }
   res.json({ success: true });
 });

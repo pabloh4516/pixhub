@@ -121,12 +121,16 @@ async function getValidToken(account) {
 
 // Generate PIX
 async function generatePix(account, amountInCents, depixAddress) {
+  const { getSetting } = require("../database");
   const token = await getValidToken(account);
+  const addr = depixAddress || account.depix_address || getSetting("global_depix_address", "");
+
+  if (!addr) throw new Error("Nenhum endereco DePix configurado (conta ou global)");
 
   const res = await depixFetch("/api/depix", {
     method: "POST",
     headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-    body: JSON.stringify({ amountInCents, depixAddress: depixAddress || account.depix_address })
+    body: JSON.stringify({ amountInCents, depixAddress: addr })
   });
 
   const data = await res.json();
